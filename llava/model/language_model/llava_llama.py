@@ -14,7 +14,7 @@
 
 
 from typing import List, Optional, Tuple, Union
-
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -47,7 +47,6 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         self.pretraining_tp = config.pretraining_tp
         self.vocab_size = config.vocab_size
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
-
         # Initialize weights and apply final processing
         self.post_init()
 
@@ -69,7 +68,6 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         image_sizes: Optional[List[List[int]]] = None,
         return_dict: Optional[bool] = None,
     ) -> Union[Tuple, CausalLMOutputWithPast]:
-
         if inputs_embeds is None:
             (
                 input_ids,
@@ -87,8 +85,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
                 images,
                 image_sizes
             )
-
-        return super().forward(
+        output = super().forward(
             input_ids=input_ids,
             attention_mask=attention_mask,
             position_ids=position_ids,
@@ -100,6 +97,21 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict
         )
+
+        # logits = output.logits
+        # last_token_logits = logits[0, -1, :]
+        # import torch.nn.functional as F
+        # probs = F.softmax(last_token_logits, dim=-1)
+        # top_k = 5
+        # top_probs, top_indices = torch.topk(probs, top_k)
+        # from transformers import AutoTokenizer
+        # tokenizer = AutoTokenizer.from_pretrained('liuhaotian/llava-v1.5-7b')
+        # print("Top 5 next tokens and their probabilities:")
+        # for i, (prob, index) in enumerate(zip(top_probs, top_indices)):
+        #     token = tokenizer.decode([index])  # 假设您有访问tokenizer的权限
+        #     print(f"  {i+1}. '{token}': {prob.item():.4f}")
+        # breakpoint()
+        return output
 
     @torch.no_grad()
     def generate(
@@ -113,7 +125,60 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         attention_mask = kwargs.pop("attention_mask", None)
         if "inputs_embeds" in kwargs:
             raise NotImplementedError("`inputs_embeds` is not supported")
+        image_attention_mask = None
+        #####################################################
+        # my code: process the image first
+        # if images is not None:
+        #     most_similar_token_ids = ['first']
+        #     image_features_1 = self.encode_images(images)
+        #     for image_feature in image_features_1[0]:
+        #         temp = self.model.embed_tokens.weight.to(image_features_1.device)
+        #         similarities = torch.nn.functional.cosine_similarity(
+        #             image_feature.unsqueeze(0),
+        #             temp,
+        #             dim=-1
+        #         )
+        #         most_similar_token_id = similarities.argmax().item()
+        #         most_similar_token_ids.append(most_similar_token_id)
+        #     # image_attention_mask: 1, 1, 577, 577
+        #     image_attention_mask = torch.ones(len(most_similar_token_ids), len(most_similar_token_ids), dtype=torch.bool)
+        #     count = 0
+        #     for i, value in enumerate(most_similar_token_ids):
+        #         # if value in [5333, 13551]:
+        #         if value in [30296]: # 30296, 134, 4484
+        #             image_attention_mask[i,:] = False
+        #             image_attention_mask[:,i] = False
+        #             count += 1
+        #     print(count)
 
+        #     image_attention_mask = image_attention_mask.unsqueeze(0).unsqueeze(0).to(image_features_1.device)
+
+
+        #     image_features_2 = self.encode_images(images, image_attention_mask)
+        #     most_similar_token_ids = ['first']
+        #     for image_feature in image_features_2[0]:
+        #         temp = self.model.embed_tokens.weight.to(image_features_2.device)
+        #        
+        #  similarities = torch.nn.functional.cosine_similarity(
+        #             image_feature.unsqueeze(0),
+        #             temp,
+        #             dim=-1
+        #         )
+        #         most_similar_token_id = similarities.argmax().item()
+        #         most_similar_token_ids.append(most_similar_token_id)
+        #     # image_attention_mask: 1, 1, 577, 577
+        #     image_attention_mask = torch.ones(len(most_similar_token_ids), len(most_similar_token_ids), dtype=torch.bool)
+        #     count = 0
+        #     for i, value in enumerate(most_similar_token_ids):
+        #         # if value in [5333, 13551]:
+        #         if value in [30296, 134]:
+        #             image_attention_mask[i,:] = False
+        #             image_attention_mask[:,i] = False
+        #             count += 1
+        #     print(count)
+            # image_attention_mask = image_attention_mask.unsqueeze(0).unsqueeze(0).to(image_features_2.device)
+        #     # print(image_attention_mask)
+        #####################################################
         if images is not None:
             (
                 inputs,
@@ -129,11 +194,188 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
                 None,
                 None,
                 images,
-                image_sizes=image_sizes
+                image_sizes=image_sizes,
+                image_attention_mask=image_attention_mask
             )
         else:
             inputs_embeds = self.get_model().embed_tokens(inputs)
+        # mode = "original"
+        mode = "look at the image tokens"
+        # mode = "replace the tokens"
+        # mode = "ignore the tokens"
 
+
+        #####################################################  get the most similar token for each image token
+        if mode == "look at the image tokens":
+            most_similar_token_ids = []
+            new_text_embeddings = []
+            for position_embed in inputs_embeds[0][35:35+576]:  # inputs_embeds shape: (1, 626, 4096)
+            # calculate the similarity between the position embedding and the token embedding
+                temp = self.model.embed_tokens.weight.to(position_embed.device)
+                similarities = torch.nn.functional.cosine_similarity(
+                    position_embed.unsqueeze(0),  # shape: (1, 4096)
+                    # self.model.embed_tokens.weight,  # shape: (32000, 4096)
+                    temp,
+                    dim=-1
+                )  # shape: (32000,)
+                # find the most similar token
+                most_similar_token_id = similarities.argmax().item()
+                most_similar_token_ids.append(most_similar_token_id)
+                new_text_embeddings.append(self.model.embed_tokens(torch.tensor([most_similar_token_id]).to(inputs_embeds.device)))
+
+            new_text_embeddings = torch.stack(new_text_embeddings)
+            new_text_embeddings = new_text_embeddings.squeeze(1)
+            inputs_embeds[0][35:35+576] = new_text_embeddings
+
+            ############# print #############
+            # print(most_similar_token_ids)
+            # from transformers import AutoTokenizer
+            # tokenizer = AutoTokenizer.from_pretrained('liuhaotian/llava-v1.5-7b')
+            # most_similar_tokens = [tokenizer.decode(token_id) for token_id in most_similar_token_ids]
+            # print(most_similar_tokens)
+
+            # new_image_embedding = []
+            # for i, token_id in enumerate(most_similar_token_ids):
+            #     token_embedding = self.model.embed_tokens(torch.tensor([token_id]).to(inputs_embeds.device))
+            #     new_image_embedding.append(token_embedding)
+            # new_image_embedding = torch.stack(new_image_embedding)
+            # new_image_embedding = new_image_embedding.squeeze(1)
+            # inputs_embeds[0][35:35+576] = new_image_embedding
+
+        #####################################################
+
+
+        ##################################################### mask traget text
+        # # Note: inputs_embeds.size() = torch.Size([1, 626, 5120])
+        # mask = torch.ones(len(most_similar_token_ids), dtype=torch.bool)
+        # for i, value in enumerate(most_similar_token_ids):
+        #     if value in [5333]:
+        #     # if value in [30296]:  # 30296, 134, 4484
+        #         mask[i] = False
+
+
+        # masked_token_number = attention_mask.size(0) - attention_mask.sum().item()
+        # total_image_token_number = 576 - (attention_mask.size(0) - attention_mask.sum().item())
+        # total_language_token_number = attention_mask.size(0) - 576
+        # with open('token_number.txt', 'a') as f:
+        #     f.write(f'{masked_token_number}, {total_image_token_number}, {total_language_token_number}\n')
+        # attention_mask = attention_mask.unsqueeze(0).to(inputs_embeds.device)
+        #####################################################
+        image_embedding = inputs_embeds[0][35:35+576]  # 576, 4096
+        ##################################################### mask according to the distance
+        if mode == "mask according to the distance":
+        # get the embedding of ्
+            target_token_id = 30296
+            target_token_id = 5333
+            target_token_id = 24841
+            target_token_embedding = self.model.embed_tokens(torch.tensor([target_token_id]).to(inputs_embeds.device))
+            similarities = []
+            for embedding in image_embedding:
+                similaritie = torch.nn.functional.cosine_similarity(
+                    embedding.unsqueeze(0),
+                    target_token_embedding.unsqueeze(0),
+                    dim=-1
+                )
+                similarities.append(similaritie)
+            # rank
+            similarities = torch.tensor(similarities)
+            _, indices = torch.sort(similarities, descending=False)  # true: mask the most similar tokens
+            for __ in _:
+                print(__)
+            rate = 0.33
+            # mask according to similarity
+            mask = torch.tensor([1 if i not in indices[:int(rate*576)] else 0 for i in range(576)], dtype=torch.bool).to(inputs_embeds.device)
+                    
+            # if mask randomly
+            # rate = 0
+            # torch.manual_seed(33)
+            # indices = torch.randperm(576)
+            # mask = torch.tensor([1 if i not in indices[:int(rate*576)] else 0 for i in range(576)], dtype=torch.bool).to(inputs_embeds.device)
+
+
+            attention_mask = torch.ones(inputs_embeds.size(1), dtype=torch.bool).to(inputs_embeds.device)
+            attention_mask[35:35+576] = mask
+            attention_mask = attention_mask.unsqueeze(0).to(inputs_embeds.device)
+ 
+        # replace the most similar tokens with dog
+        if mode == "replace the tokens":
+            dog_embedding = self.model.embed_tokens(torch.tensor([11203]).to(inputs_embeds.device))  # dog
+            dog_embedding = self.model.embed_tokens(torch.tensor([10435]).to(inputs_embeds.device))  # horse
+            dog_embedding = self.model.embed_tokens(torch.tensor([11199]).to(inputs_embeds.device))  # bird
+            
+            rate = 0.5
+            # for i in range(576):
+            # # if i in indices[:int(rate*576)]:  # change the most similar tokens to dog
+            #     if i in list(range(0, int(576*rate))):  # change first rate tokens to dog
+            #         image_embedding[i] = dog_embedding
+            
+
+            # if change the bbox to dog tokens
+            for x in range(24):
+                for y in range(24):
+                    if x >= 8 and x <=20 and y>=8 and y<=16:
+                        image_embedding[y*24+x] = dog_embedding
+
+            inputs_embeds[0][35:35+576] = image_embedding
+
+        # if ignore the bbox
+
+        if mode == "ignore the tokens":
+            
+            mask = torch.ones(24, 24, dtype=torch.bool)
+            mask[6:15, 2:14] = False
+
+            mask = mask.flatten()
+            image_embedding = image_embedding[mask]
+
+            # inputs_embeds[0][35:35+576] = image_embedding
+            inputs_embeds = torch.cat((inputs_embeds[0][:35], image_embedding, inputs_embeds[0][35+576:]), 0)
+            inputs_embeds = inputs_embeds.unsqueeze(0)
+
+
+
+
+        # most_similar_token_ids = []
+        # for position_embed in inputs_embeds[0][35:35+576]:  # inputs_embeds shape: (1, 626, 4096)
+        # # calculate the similarity between the position embedding and the token embedding
+        #     temp = self.model.embed_tokens.weight.to(position_embed.device)
+        #     similarities = torch.nn.functional.cosine_similarity(
+        #         position_embed.unsqueeze(0),  # shape: (1, 4096)
+        #         # self.model.embed_tokens.weight,  # shape: (32000, 4096)
+        #         temp,
+        #         dim=-1
+        #     )  # shape: (32000,)
+        #     # find the most similar token
+        #     most_similar_token_id = similarities.argmax().item()
+        #     most_similar_token_ids.append(most_similar_token_id)
+        # print(most_similar_token_ids)
+        # from transformers import AutoTokenizer
+        # tokenizer = AutoTokenizer.from_pretrained('liuhaotian/llava-v1.5-7b')
+        # most_similar_tokens = [tokenizer.decode(token_id) for token_id in most_similar_token_ids]
+        # print(most_similar_tokens)
+
+        #####################################################
+
+        #####################################################  look up the most similar token
+        # from transformers import AutoTokenizer
+        # tokenizer = AutoTokenizer.from_pretrained('/home/peter/files/LLaVA/checkpoints/llava-v1.5-7b')
+        # most_similar_token_texts = []
+        # for i in indices:
+        #     one_image_embedding = image_embedding[i]
+        #     temp = self.model.embed_tokens.weight.to(image_embedding.device)
+        #     similarities = torch.nn.functional.cosine_similarity(
+        #         one_image_embedding.unsqueeze(0),
+        #         temp,
+        #         dim=-1
+        #     )
+        #     most_similar_token_id = similarities.argmax().item()
+        #     most_similar_token_text = tokenizer.decode(most_similar_token_id)
+        #     most_similar_token_texts.append(most_similar_token_text)
+        # print(most_similar_token_texts)
+
+        #####################################################
+        
+        
         return super().generate(
             position_ids=position_ids,
             attention_mask=attention_mask,

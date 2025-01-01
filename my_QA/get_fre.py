@@ -1,0 +1,23 @@
+# 准备文本数据
+text_data = ['illery', 'ş', 'dale', 'local', 'sl', 'proud', 'store', 'ondissement', 'ello', 'ло', 'red', '英', 'light', 'isat', 'rage', 'ihm', 'LL', 'ى', 'ز', 'trois', 'sobre', 'alguns', 'trois', 'vre', '्', 'tt', 'dale', 'dale', 'ş', 'gew', 'cold', 'tired', 'ells', 'sent', 'isat', 'ante', 'mail', 'mail', 'isat', 'ello', '`', 'trois', '六', 'ething', 'ヤ', 'CSV', '्', '्', '्', 'nello', 'dale', 'brick', 'tired', 'ى', 'data', 'ans', '경', 'ု', 'mail', 'hor', 'isat', 'mail', 'isat', 'ello', 'ARD', 'trois', 'NU', 'scriptstyle', 'stone', 'jav', 'NU', '्', 'ins', 'white', '्', '्', 'lin', 'lin', 'lin', 'ans', 'ans', 'box', 'mail', 'red', 'img', 'isan', 'isan', '्', 'ز', 'My', 'נ', 'stone', '्', 'ч', 'NU', '्', 'boundaries', 'ş', 'fitted', 'jdbc', 'school', 'cro', 'son', 'dale', 'isat', 'light', '�', '�', 'nbsp', 'img', 'red', 'O', 'My', 'aut', 'stone', '्', 'stone', '्', 'NU', 'ş', 'arian', 'licher', '्', 'ş', 'cro', 'cl', 'gem', 'dale', 'iles', 'red', 'img', '�', 'nbsp', 'ells', '्', 'ü', 'boundaries', 'stone', '्', '्', 'stone', '्', 'stone', '�', '्', 'タ', '्', 'CON', 'house', 'dale', 'נ', 'house', 'ская', 'mail', 'rész', 'legt', 'img', 'ITE', '्', 'CSV', 'sl', 'stone', 'stone', 'pity', '्', '्', 'stone', 'stone', 'נ', '�', 'jav', 'stone', 'dale', 'boundaries', 'school', 'window', 'window', '्', 'img', 'dd', '英', 'ة', '्', 'boundaries', 'ível', 'ч', 'jav', 'aut', 'ヤ', '्', 'ws', 'brick', '्', 'ü', 'ş', 'ş', 'house', 'タ', 'esses', 'esses', 'esses', '्', 'mail', 'red', 'red', 'mail', 'isat', 'boundaries', 'sl', '्', 'stone', 'stone', 'font', 'NU', 'cm', 'trois', 'ş', 'dale', 'boundaries', 'font', 'ş', 'brick', 'dale', 'сно', 'far', 'isat', 'white', 'mail', 'militaire', 'lm', 'mail', '्', '्', 'stone', 'stone', 'stone', '位', '्', 'ş', 'jav', 'Mason', 'dale', 'val', '्', 'jav', 'six', 'stone', 'タ', 'school', '्', 'red', 'red', 'white', 'cro', 'config', 'UT', 'stone', '्', '्', '位', 'UT', '्', 'pity', 'stone', 'dale', '्', 'cro', '्', 'ica', 'ordinary', 'five', 'five', 'ław', '्', 'isat', 'data', 'ass', 'silver', 'sters', 'cm', 'Icon', 'supposed', 'stone', 'igh', '位', 'ws', 'ş', 'ş', '्', '्', '्', 'ething', '्', 'scriptstyle', 'scriptstyle', 'scriptstyle', 'DIR', 'red', 'а', 'cap', 'owy', 'rs', 'sters', 'cm', '्', '्', '्', 'igh', 'stone', '्', '्', '�', 'ло', '्', '्', 'stone', 'cinco', 'lin', '터', 'scriptstyle', 'our', '्', 'name', 'crown', 'England', 'а', 'militaire', 'alguns', 'val', 'ز', 'stone', 'NU', '्', 'stone', 'scriptstyle', 'GS', '्', 'indeed', '्', 'VAL', 'On', 'cro', 'в', 'kilom', 'ü', '्', 'name', '3', 'ôle', '7', '्', '्', 'ز', 'ugly', 'stone', '्', 'себе', '्', 'ü', 'scriptstyle', '्', 'hall', '्', 'stone', 'rac', 'grass', 'ą', 'grass', 'cm', 'mail', 'sq', '9', 'Colonel', 'under', 'gold', '्', 'itime', 'On', 'On', '्', '्', 'ч', 'On', 'trois', '�', 'dale', 'ş', 'VAL', 'VAL', 'scriptstyle', 'arts', 'scriptstyle', 'ța', 'militaire', 'name', 'ョ', 'under', 'under', '्', '्', 'pity', 'Mason', 'val', '्', '्', 'ş', 'stone', 'CSV', 'al', 'dale', '्', 'cm', 'ская', 'val', 'jav', 'lin', 'tired', 'GB', '字', 'ën', '*.', '*.', 'IG', '्', 'scriptstyle', 'ز', '्', 'stone', '्', '्', 'xter', '्', 'Article', '्', 'suas', '्', 'ская', 'cles', 'road', '्', 'ס', 'militaire', 'Hot', 'red', '*.', 'igger', 'red', 'ells', '्', 'titled', '्', 'ica', 'stone', 'xter', '्', 'stone', 'GS', 'trois', '्', '्', 'scriptstyle', 'road', 'ething', 'ething', 'venir', 'shire', 'ס', 'red', 'ס', 'ল', 'ल', '>\r', 'scriptstyle', 'actory', 'scriptstyle', 'jav', 'ü', '्', '्', 'GS', '्', 'On', 'scriptstyle', '्', '्', 'ething', '्', 'ething', 'black', 'ties', 'scriptstyle', 'black', 'black', 'umph', 'cm', 'cm', 'ヤ', 'pply', 'ches', 'pity', '्', '्', '्', 'trois', 'ible', 'CSV', '्', 'cles', 'FS', '्', '्', 'scriptstyle', 'shire', 'black', '्', 'font', 'black', 'black', 'ties', 'ondissement', 'Icon', 'pity', 'trois', 'itime', 'Icon', 'nello', 'ley', 'stone', '्', 'scriptstyle', '्', '्', 'ць', 'slight', 'scriptstyle', 'On', 'ells', 'black', 'black', 'supposed', 'GS', 'cy', 'shire', 'Icon', 'ز', 'scriptstyle', '्', 'scriptstyle', 'scriptstyle', '्', 'ى', 'UT', 'hosted', 'aut', 'ν', 'aut', '्', '्', '्', '्', 'Icon', '्', '्', 'black', 'GS', '्', 'vy', 'Icon', 'ская', '्', '्', '्', 'aut', '्', 'cm', 'Blue']
+
+print(len(text_data))
+frequency_dict = {}
+my_str = ''
+index = 0
+for word in text_data:
+    # 单词对齐
+    my_str += f'{word: <10}'
+    frequency_dict[word] = frequency_dict.get(word, 0) + 1
+    index += 1
+    if index % 24 == 0:
+        my_str += '\n' + '\n'
+
+# 按照出现次数从多到少排序
+sorted_frequency = sorted(frequency_dict.items(), key=lambda item: item[1], reverse=True)
+
+# print结果
+# print(my_str)
+for word, frequency in sorted_frequency:
+    print(f'{word}: {frequency}')
+

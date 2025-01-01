@@ -25,7 +25,6 @@ from llava.constants import DEFAULT_IMAGE_PATCH_TOKEN, DEFAULT_IM_START_TOKEN, D
 
 def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, load_4bit=False, device_map="auto", device="cuda", use_flash_attn=False, **kwargs):
     kwargs = {"device_map": device_map, **kwargs}
-
     if device != "cuda":
         kwargs['device_map'] = {"": device}
 
@@ -44,7 +43,6 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
 
     if use_flash_attn:
         kwargs['attn_implementation'] = 'flash_attention_2'
-
     if 'llava' in model_name.lower():
         # Load LLaVA model
         if 'lora' in model_name.lower() and model_base is None:
@@ -106,6 +104,7 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
                 tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
                 model = LlavaMptForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
             elif 'mistral' in model_name.lower():
+                # here
                 tokenizer = AutoTokenizer.from_pretrained(model_path)
                 model = LlavaMistralForCausalLM.from_pretrained(
                     model_path,
@@ -119,6 +118,9 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
                     low_cpu_mem_usage=True,
                     **kwargs
                 )
+                # mm_projector_weights = torch.load(os.path.join(model_path, 'mm_projector.bin'), map_location='cpu')
+                # mm_projector_weights = {k: v.to(torch.float16) for k, v in mm_projector_weights.items()}
+                # model.load_state_dict(mm_projector_weights, strict=False)
     else:
         # Load language model
         if model_base is not None:

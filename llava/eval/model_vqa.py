@@ -52,12 +52,12 @@ def eval_model(args):
         conv.append_message(conv.roles[0], qs)
         conv.append_message(conv.roles[1], None)
         prompt = conv.get_prompt()
-
+    
         input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).cuda()
 
         image = Image.open(os.path.join(args.image_folder, image_file)).convert('RGB')
         image_tensor = process_images([image], image_processor, model.config)[0]
-
+        args.temperature = 0
         with torch.inference_mode():
             output_ids = model.generate(
                 input_ids,
@@ -70,9 +70,9 @@ def eval_model(args):
                 # no_repeat_ngram_size=3,
                 max_new_tokens=1024,
                 use_cache=True)
-
         outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
-
+        print(qs)
+        print(outputs)
         ans_id = shortuuid.uuid()
         ans_file.write(json.dumps({"question_id": idx,
                                    "prompt": cur_prompt,
